@@ -86,12 +86,13 @@ And finally with translate_routes and prefix_on_default_locale=true the routes a
   root_en  /en {:action=>"index", :controller=>"home", :locale=>"en"}
 
 It's important to note that in this last case the original root route does not get the "locale" param.  This allows controller
-code to distinguish the "unlocalized root" path ("/") from the "localized root" path ("/es", "/en") and to redirect the user
+code to distinguish the "unlocalized root" path ("/") from the "localized root" paths ("/es", "/en") and to redirect the user
 to a suitable default locale from the unlocalized root.  The following example shows how to do it with the excellent 
 http_accept_language plugin (http://github.com/iain/http_accept_language):
 
   def index
     available_locales = [ "es", "en"]
+
     unless params[ :locale]
       # if the locale is not specified in the URL we are in the unlocalized root path
       # we find the first available locale from the user agent's Accept-Language header
