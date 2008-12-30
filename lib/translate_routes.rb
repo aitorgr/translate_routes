@@ -112,15 +112,7 @@ module ActionController
           
           end
         
-          # reorder and assign new routes, giving preference to...
-          default_locale_routes = new_routes.select { |r|
-            r.requirements[:locale] == default_locale ||  # ... routes with the default locale
-            r.segments.length == 1                        # ... root route (the root route must go first if not Rails will match the translated version instead) *toDO* why?
-          }
-          Routes.routes = (default_locale_routes + new_routes).uniq!
-          # ^
-
-          # add named routes
+          Routes.routes = new_routes
           new_named_routes.each { |name, r| Routes.named_routes.add name, r }
           
           add_locale_suffix_helper
@@ -160,7 +152,7 @@ module ActionController
           segments = []
           
           if add_prefix?(locale) # initial prefix i.e: /en-US
-            divider = DividerSegment.new(orig.segments.first.value, :optionals => false) # divider ('/')
+            divider = DividerSegment.new(orig.segments.first.value, :optional => false) # divider ('/')
             static = StaticSegment.new(locale, :optional => false) # static ('en-US')
             segments += [divider, static]
           end

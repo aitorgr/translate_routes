@@ -227,6 +227,7 @@ class TranslateRoutesTest < Test::Unit::TestCase
   end
 
   # Root ("empty") route
+
   def test_root_route_without_prefix
     ActionController::Routing::Routes.draw { |map| map.root :controller => 'people', :action => 'index'}
     config_default_locale_settings('es-ES', false)
@@ -249,6 +250,24 @@ class TranslateRoutesTest < Test::Unit::TestCase
     assert_routing '/', :controller => 'people', :action => 'index'
     assert_routing '/es-ES', :controller => 'people', :action => 'index', :locale => 'es-ES'
     assert_routing '/en-US', :controller => 'people', :action => 'index', :locale => 'en-US'
+  end
+
+  # Other tests
+
+  def test_root_route_with_prefix_after_other_routes
+    ActionController::Routing::Routes.draw { |map| 
+      map.people 'people', :controller => 'people', :action => 'index'
+      map.root :controller => 'people', :action => 'root'
+    }
+
+    config_default_locale_settings('es-ES', true)
+    ActionController::Routing::Translator.translate_from_file 'test', 'locales', 'routes.yml'
+
+    assert_routing '/', :controller => 'people', :action => 'root'
+    assert_routing '/es-ES', :controller => 'people', :action => 'root', :locale => 'es-ES'
+    assert_routing '/en-US', :controller => 'people', :action => 'root', :locale => 'en-US'
+    assert_routing '/en-US/people', :controller => 'people', :action => 'index', :locale => 'en-US'
+    assert_routing '/es-ES/gente', :controller => 'people', :action => 'index', :locale => 'es-ES'
   end
 
   # Configuration options
@@ -282,7 +301,6 @@ class TranslateRoutesTest < Test::Unit::TestCase
   end
 
   class StubbedI18nBackend
-    
     
     @@translations = { 
       'es-ES' => { 'people' => 'gente'}, 
