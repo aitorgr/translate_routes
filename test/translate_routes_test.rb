@@ -226,6 +226,33 @@ class TranslateRoutesTest < Test::Unit::TestCase
     assert_helpers_include :people_fr_fr, :people_en_us, :people_es_es, :people
   end
 
+  # Root ("empty") route
+  def test_root_route_without_prefix
+    ActionController::Routing::Routes.draw { |map| map.root :controller => 'people', :action => 'index'}
+    config_default_locale_settings('es-ES', false)
+    ActionController::Routing::Translator.translate_from_file 'test', 'locales', 'routes.yml'
+
+    assert_routing '/', :controller => 'people', :action => 'index', :locale => 'es-ES'
+    assert_routing '/en-US', :controller => 'people', :action => 'index', :locale => 'en-US'
+
+    # test that the given route is not recognized
+    assert_raise ActionController::RoutingError do
+      assert_routing '/es-ES', :controller => 'people', :action => 'index', :locale => 'es-ES'
+    end
+  end
+
+  def test_root_route_with_prefix
+    ActionController::Routing::Routes.draw { |map| map.root :controller => 'people', :action => 'index'}
+    config_default_locale_settings('es-ES', true)
+    ActionController::Routing::Translator.translate_from_file 'test', 'locales', 'routes.yml'
+
+    assert_routing '/', :controller => 'people', :action => 'index'
+    assert_routing '/es-ES', :controller => 'people', :action => 'index', :locale => 'es-ES'
+    assert_routing '/en-US', :controller => 'people', :action => 'index', :locale => 'en-US'
+  end
+
+  # Configuration options
+
   def test_action_controller_gets_locale_setter
     ActionController::Base.instance_methods.include?('set_locale_from_url')
   end

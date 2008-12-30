@@ -112,13 +112,18 @@ module ActionController
           
           end
         
-          # apply new routes, giving preference to the default locale
-          default_locale_routes = new_routes.select{ |r| r.requirements[:locale] == default_locale }
+          # reorder and assign new routes, giving preference to...
+          default_locale_routes = new_routes.select { |r|
+            r.requirements[:locale] == default_locale ||  # ... routes with the default locale
+            r.segments.length == 1                        # ... root route (the root route must go first if not Rails will match the translated version instead) *toDO* why?
+          }
           Routes.routes = (default_locale_routes + new_routes).uniq!
+          # ^
+
+          # add named routes
           new_named_routes.each { |name, r| Routes.named_routes.add name, r }
           
           add_locale_suffix_helper
-          
         end
 
         def self.generate_helpers(old_name)
@@ -186,6 +191,13 @@ module ActionController
         def self.translate_route(route, route_name = nil)
           new_routes = []
           new_named_routes = {}  
+
+          # we keep the root route intact if @prefix_on_default_locale == true
+          if route.segments.length == 1 && prefix_on_default_locale # root route has just one segment
+            new_routes << route
+            new_named_routes[ route_name] = route
+          end
+
           available_locales.each do |locale|
             translated = translate_route_by_locale(route, locale, route_name)
             new_routes << translated          
